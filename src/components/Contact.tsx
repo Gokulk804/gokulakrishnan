@@ -5,10 +5,8 @@ import { CheckCircle2, Loader2, Mail, MapPin, Phone, Send, XCircle } from 'lucid
 import Reveal from './Reveal'
 import { profile } from '../data'
 
-// 1. Create a free form at https://formspree.io (sign up, "New Form").
-// 2. Copy the endpoint it gives you, e.g. https://formspree.io/f/abcdwxyz
-// 3. Paste it below, replacing the placeholder.
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID'
+// Sends via the /api/contact serverless function (Resend under the hood).
+// Set RESEND_API_KEY and CONTACT_TO_EMAIL in your Vercel project's Environment Variables — see README.md.
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
@@ -18,19 +16,14 @@ export default function Contact() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
-    const data = new FormData(form)
-
-    if (FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID')) {
-      setStatus('error')
-      return
-    }
+    const data = Object.fromEntries(new FormData(form).entries())
 
     setStatus('loading')
     try {
-      const res = await fetch(FORMSPREE_ENDPOINT, {
+      const res = await fetch('/api/contact', {
         method: 'POST',
-        body: data,
-        headers: { Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       })
       if (res.ok) {
         setStatus('success')

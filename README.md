@@ -13,10 +13,15 @@ Open http://localhost:5173
 
 ## Before deploying
 
-1. **Contact form** — this uses [Formspree](https://formspree.io) (free tier: 50 submissions/month) so the "Contact" form can email you without a backend.
-   - Sign up at formspree.io → create a new form → copy the endpoint (looks like `https://formspree.io/f/abcdwxyz`).
-   - Paste it into `src/components/Contact.tsx`, replacing the `FORMSPREE_ENDPOINT` placeholder.
-   - Until you do this, the form will show a friendly error telling visitors to email you directly — nothing breaks.
+1. **Contact form (Resend)** — the form posts to a Vercel Serverless Function at `api/contact.ts`, which sends the email via your [Resend](https://resend.com) account. Nothing is exposed to the browser.
+   - Get an API key: [resend.com/api-keys](https://resend.com/api-keys) → Create API Key.
+   - In your **Vercel project** → Settings → Environment Variables, add:
+     - `RESEND_API_KEY` — the key from above
+     - `CONTACT_TO_EMAIL` — the address you want messages delivered to (e.g. `gokulk804@gmail.com`)
+     - `CONTACT_FROM_EMAIL` *(optional)* — only set this once you've verified your own sending domain in Resend (e.g. `Portfolio Contact <hello@yourdomain.com>`). Until then, leave it unset — it falls back to Resend's shared `onboarding@resend.dev` sender.
+   - **Sandbox limitation:** without a verified domain, Resend only lets `onboarding@resend.dev` deliver to the email address registered on your own Resend account. That's fine here since the form is meant to email *you* — just make sure `CONTACT_TO_EMAIL` matches your Resend account's email. To accept mail at any address / send from your own domain, verify a domain under Resend → Domains, then set `CONTACT_FROM_EMAIL`.
+   - Redeploy after adding/changing env vars (Vercel doesn't hot-reload them).
+   - To test locally: `npm i -g vercel`, copy `.env.example` to `.env` and fill it in, then run `vercel dev` (plain `npm run dev` won't run the `/api` function since that's a Vite-only dev server).
 
 2. **Resume file** — `public/resume.pdf` is your resume, downloadable from the site's "Resume" buttons. Replace it any time you update your resume (keep the filename `resume.pdf`, or update the path in `src/data.ts`).
 
