@@ -23,9 +23,18 @@ Open http://localhost:5173
    - Redeploy after adding/changing env vars (Vercel doesn't hot-reload them).
    - To test locally: `npm i -g vercel`, copy `.env.example` to `.env` and fill it in, then run `vercel dev` (plain `npm run dev` won't run the `/api` function since that's a Vite-only dev server).
 
-2. **Resume file** — `public/resume.pdf` is your resume, downloadable from the site's "Resume" buttons. Replace it any time you update your resume (keep the filename `resume.pdf`, or update the path in `src/data.ts`).
+2. **Contact log (Supabase)** — every submission is also logged to a Supabase table, independent of whether the email send succeeds.
+   - In your Supabase project, open **SQL Editor → New query**, paste the contents of `supabase/contact_submissions.sql`, and run it once. This creates a `contact_submissions` table (name, email, subject, message, user agent, IP, timestamp) with Row Level Security enabled and no public policies — it's only reachable via the service_role key from the serverless function, never from the browser.
+   - Get your credentials from Supabase → Project Settings → API:
+     - `SUPABASE_URL` — the Project URL
+     - `SUPABASE_SERVICE_ROLE_KEY` — the **service_role** secret key (not the `anon` key — this one bypasses RLS and must stay server-side only)
+   - Add both as Environment Variables in your Vercel project (same place as the Resend vars above), then redeploy.
+   - To view submissions: Supabase → Table Editor → `contact_submissions`.
+   - If these two env vars aren't set, the function just skips logging (and says so in the function logs) — the contact form's email delivery still works fine on its own.
 
-3. **Content** — all resume text (summary, skills, experience, projects, education) lives in `src/data.ts`. Edit that one file to update copy without touching components.
+3. **Resume file** — `public/resume.pdf` is your resume, downloadable from the site's "Resume" buttons. Replace it any time you update your resume (keep the filename `resume.pdf`, or update the path in `src/data.ts`).
+
+4. **Content** — all resume text (summary, skills, experience, projects, education) lives in `src/data.ts`. Edit that one file to update copy without touching components.
 
 ## Deploy to Vercel (free)
 
@@ -47,4 +56,4 @@ Follow the prompts (first time asks to link/create a project). Then `vercel --pr
 - **Tailwind CSS** for styling
 - **Framer Motion** for scroll reveals, hero animations, and micro-interactions
 - **lucide-react** for icons
-- Zero backend — fully static, Formspree handles the contact form
+- **Vercel Serverless Function** (`api/contact.ts`) handles the contact form: sends email via **Resend** and logs each submission to **Supabase** — everything else is fully static
